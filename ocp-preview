@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#version 0.5
+#version 0.6
 
 set -e
 
@@ -17,6 +17,8 @@ PAGES=$(git diff-tree HEAD HEAD~1 --no-commit-id --name-only -r | awk '!/modules
 cd $REPO_PATH
 
 distro=$2
+
+page=$3
 
 if [[ -z "$distro" ]]; then
     distro="-d openshift-enterprise"
@@ -37,10 +39,16 @@ function full_build {
 }
 
 function refresh_build {
-  for PAGE in $PAGES
-    do asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."; rsync_build; echo "...rsync run complete!"
-    xdg-open >/dev/null 2>&1 http://$FILE_SERVER/$USER/$CURRENT_BRANCH/$PAGE.html 
-  done
+  if [[ -z "$page" ]]; then
+    for PAGE in $PAGES
+      do asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."; rsync_build; echo "...rsync run complete!"
+      xdg-open >/dev/null 2>&1 http://$FILE_SERVER/$USER/$CURRENT_BRANCH/$PAGE.html 
+    done
+    else
+      PAGE=$page
+      echo "Building the $PAGE page..."
+      asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."
+  fi
 }
 
 function rsync_build {
@@ -48,9 +56,14 @@ function rsync_build {
 }
 
 function build_rsync_silent {
-  for PAGE in $PAGES
-    do asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."
-  done
+  if [[ -z "$page" ]]; then
+    for PAGE in $PAGES
+      do asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."
+    done
+    else
+      PAGE=$page
+      asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."
+  fi
 
   rsync_build
 
@@ -63,16 +76,26 @@ function local_full_build {
 }
 
 function local_refresh_build {
-  for PAGE in $PAGES
-    do asciibinder build --page=$PAGE
-    xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/$PAGE.html
-  done
+  if [[ -z "$page" ]]; then
+    for PAGE in $PAGES
+      do asciibinder build --page=$PAGE
+      xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/$PAGE.html
+    done
+    else
+      PAGE=$page
+      asciibinder clean; asciibinder build --page=$PAGE
+  fi
 }
 
 function local_refresh_silent {
-  for PAGE in $PAGES
-    do asciibinder build --page=$PAGE
-  done
+  if [[ -z "$page" ]]; then
+    for PAGE in $PAGES
+      do asciibinder build --page=$PAGE
+    done
+    else
+      PAGE=$page
+      asciibinder clean; asciibinder build --page=$PAGE
+  fi
 }
 
 function delete_build {
@@ -81,20 +104,21 @@ function delete_build {
 }
 
 function show_help {
-  echo "Usage: ocp-preview [OPTION] [DISTRO]"
+  echo "Usage: ocp-preview [OPTION] [DISTRO] [PAGE]"
   echo "Usage: [DISTRO] is optional, build default is openshift-enterprise. Specify 'all' to build all distros."
+  echo "Usage: [PAGE] is optional, use with [DISTRO] to build a specific page."
   echo "-b, --build"
   echo "               does a full clean build and rsync. Use this option if your PR does not update an assembly."
   echo "-r, --refresh"
-  echo "               builds and rsyncs updated assemblies only."
+  echo "               builds and rsyncs updated assemblies only. Uses default distro. Specify PAGE to build a specific page."
   echo "-s, --silent-refresh"
-  echo "               builds and rsyncs updated assemblies, no preview pop up."
+  echo "               builds and rsyncs updated assemblies, no preview pop up. Uses default distro. Specify PAGE to build a specific page."
   echo "-l, --local-build"
   echo "               does a full clean build locally, does not rsync. Use this option if your PR does not update an assembly."
   echo "-f, --local-refresh"
-  echo "               builds and updated assemblies locally, does not rsync."
+  echo "               builds and updated assemblies locally, does not rsync. Uses default distro. Specify PAGE to build a specific page."
   echo "-c, --local-refresh-silent"
-  echo "               builds and updated assemblies locally, does not rsync, no preview pop up."
+  echo "               builds and updated assemblies locally, does not rsync, no preview pop up. Uses default distro. Specify PAGE to build a specific page."
   echo "-d, --delete"
   echo "               deletes the current pull request build from the file server."
 }
