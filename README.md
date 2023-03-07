@@ -30,14 +30,10 @@ Usage: [DISTRO] is optional, build default is openshift-enterprise. Specify 'all
                does a full clean build and rsync. Use this option if your PR does not update an assembly.
 -r, --refresh
                builds and rsyncs updated assemblies only.
--s, --silent-refresh
-               builds and rsyncs updated assemblies, no preview pop up.
 -l, --local-build
                does a full clean build locally, does not rsync. Use this option if your PR does not update an assembly.
 -f, --local-refresh
                builds and updated assemblies locally, does not rsync.
--c, --local-refresh-silent
-               builds and updated assemblies locally, does not rsync, no preview pop up.
 -d, --delete
                deletes the current pull request build from the file server.
 ```
