@@ -15,26 +15,24 @@ CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 PAGES=$(git diff-tree HEAD HEAD~1 --no-commit-id --name-only -r | awk '!/modules\/(.*)\.adoc/' | awk '/(.*)\.adoc/' | cut -f 1 -d '.')
 
 #use the asciibinder container
-ASCIIBINDER="podman run --rm -it -v `pwd`:/docs:Z quay.io/openshift-cs/asciibinder asciibinder build"
+ASCIIBINDER="podman run --rm -it -v `pwd`:/docs:Z quay.io/openshift-cs/asciibinder asciibinder"
 
 cd $REPO_PATH
 
-distro=$2
+DISTRO=$2
 
-if [[ -z "$distro" ]]; then
-    distro="-d openshift-enterprise"
+if [[ -z "$DISTRO" ]]; then
     DISTRO="openshift-enterprise"
   elif [[ "$2" = "all" ]]; then
     echo "Building all distros..."
-    distro=""
+    DISTRO=""
   else
    echo "Building $2 distro..."
-   distro="-d $2"
    DISTRO="$2"
 fi
 
 function full_build {
-  $ASCIIBINDER $distro; echo "Running rsync..."; rsync_build; echo "...rsync run complete!"
+  $ASCIIBINDER build -d $DISTRO; echo "Running rsync..."; rsync_build; echo "...rsync run complete!"
 
   xdg-open >/dev/null 2>&1 http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html
   echo "Check the docs at: http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html"
@@ -69,7 +67,7 @@ function build_rsync_silent {
 }
 
 function local_full_build {
-  $ASCIIBINDER clean; $ASCIIBINDER $distro
+  $ASCIIBINDER clean; $ASCIIBINDER build -d $DISTRO
   xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html
   echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html"
 }
@@ -108,13 +106,13 @@ function show_help {
   echo "-b, --build"
   echo "               does a full clean build and rsync. Use this option if your PR does not update an assembly."
   echo "-r, --refresh"
-  echo "               builds and rsyncs updated assemblies only."
+  echo "               builds and rsyncs updated files only."
   echo "-s, --silent-refresh"
-  echo "               builds and rsyncs updated assemblies, no preview pop up."
+  echo "               builds and rsyncs updated files, no preview pop up."
   echo "-l, --local-build"
   echo "               does a full clean build locally, does not rsync. Use this option if your PR does not update an assembly."
   echo "-f, --local-refresh"
-  echo "               builds and updated assemblies locally, does not rsync."
+  echo "               builds updated files locally, does not rsync."
   echo "-c, --local-refresh-silent"
   echo "               builds and updated assemblies locally, does not rsync, no preview pop up."
   echo "-d, --delete"
