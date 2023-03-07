@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#version 0.7
+#version 0.8
 
 set -e
 
@@ -13,6 +13,10 @@ USER="$(git config -f ~/.ocp-preview user.name)"
 FILE_SERVER="$(git config -f ~/.ocp-preview server.name)"
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 PAGES=$(git diff-tree HEAD HEAD~1 --no-commit-id --name-only -r | awk '!/modules\/(.*)\.adoc/' | awk '/(.*)\.adoc/' | cut -f 1 -d '.')
+
+#use the asciibinder container
+alias ASCIIBINDER='podman run --rm -it -v `pwd`:/docs:Z quay.io/openshift-cs/asciibinder asciibinder build'
+
 
 cd $REPO_PATH
 
@@ -31,7 +35,7 @@ if [[ -z "$distro" ]]; then
 fi
 
 function full_build {
-  asciibinder build $distro; echo "Running rsync..."; rsync_build; echo "...rsync run complete!"
+  ASCIIBINDER $distro; echo "Running rsync..."; rsync_build; echo "...rsync run complete!"
 
   xdg-open >/dev/null 2>&1 http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html
   echo "Check the docs at: http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html"
@@ -42,7 +46,7 @@ function refresh_build {
     echo "Oop! There are no assemblies in this PR, run a full build instead..."
   else
     for PAGE in $PAGES
-      do asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."; rsync_build; echo "...rsync run complete!"
+      do ASCIIBINDER --page=$PAGE; echo "Running rsync for $PAGE..."; rsync_build; echo "...rsync run complete!"
       xdg-open >/dev/null 2>&1 http://$FILE_SERVER/$USER/$CURRENT_BRANCH/$PAGE.html 
       echo "Check the docs at: http://$FILE_SERVER/$USER/$CURRENT_BRANCH/$PAGE.html"
     done
@@ -58,7 +62,7 @@ function build_rsync_silent {
     echo "Oop! There are no assemblies in this PR, run a full build instead..."
   else
     for PAGE in $PAGES
-      do asciibinder clean; asciibinder build --page=$PAGE; echo "Running rsync for $PAGE..."
+      do ASCIIBINDER clean; ASCIIBINDER --page=$PAGE; echo "Running rsync for $PAGE..."
     done
     rsync_build
     echo "...rsync run complete!"
@@ -66,7 +70,7 @@ function build_rsync_silent {
 }
 
 function local_full_build {
-  asciibinder clean; asciibinder build $distro
+  ASCIIBINDER clean; ASCIIBINDER $distro
   xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html
   echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html"
 }
@@ -76,7 +80,7 @@ function local_refresh_build {
     echo "Oop! There are no assemblies in this PR, run a full build instead..."
   else
     for PAGE in $PAGES
-      do asciibinder build --page=$PAGE
+      do ASCIIBINDER --page=$PAGE
       xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/$PAGE.html
       echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html"
     done
@@ -88,7 +92,7 @@ function local_refresh_silent {
     echo "Oop! There are no assemblies in this PR, run a full build instead..."
   else
     for PAGE in $PAGES
-      do asciibinder build --page=$PAGE
+      do ASCIIBINDER --page=$PAGE
     done
     echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html"
   fi
