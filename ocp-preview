@@ -15,8 +15,7 @@ CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 PAGES=$(git diff-tree HEAD HEAD~1 --no-commit-id --name-only -r | awk '!/modules\/(.*)\.adoc/' | awk '/(.*)\.adoc/' | cut -f 1 -d '.')
 
 #use the asciibinder container
-alias ASCIIBINDER='podman run --rm -it -v `pwd`:/docs:Z quay.io/openshift-cs/asciibinder asciibinder build'
-
+ASCIIBINDER=$(podman run --rm -it -v `pwd`:/docs:Z quay.io/openshift-cs/asciibinder asciibinder build)
 
 cd $REPO_PATH
 
