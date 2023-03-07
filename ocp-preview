@@ -105,10 +105,6 @@ elif [ "$1" = "--local-build" -o "$1" = "-l" ]; then
   local_full_build
 elif [ "$1" = "--local-refresh" -o "$1" = "-f" ]; then
   local_refresh_build
-elif [ "$1" = "--silent" -o "$1" = "-s" ]; then
-  build_rsync_silent
-elif [ "$1" = "--local-refresh-silent" -o "$1" = "-c" ]; then
-  local_refresh_silent
 elif [ "$1" = "--delete" -o "$1" = "-d" ]; then
   delete_build
 elif [ "$1" = "--help" -o "$1" = "-h" ]; then
