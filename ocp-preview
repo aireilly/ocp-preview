@@ -72,7 +72,7 @@ function local_refresh_build {
   else
     for PAGE in $PAGES
       do $ASCIIBINDER build --page=$PAGE
-      echo "Check the docs at: http://$FILE_SERVER/$USER/$CURRENT_BRANCH/$PAGE.html"
+      echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/$PAGE.html"
     done
   fi
 }
