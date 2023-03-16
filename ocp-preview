@@ -68,7 +68,13 @@ function local_full_build {
 
 function local_refresh_build {
   if [[ -z "$PAGES" ]]; then
-    echo "Oop! There are no assemblies in this PR, run a full build instead..."
+    for MODULE in $MODULES
+      do UPDATED_PAGES=$(find . -name "*.adoc" -type f -exec grep -l "$MODULE" {} \; | sed 's|^\./||' | sed 's|\.adoc||' )
+        for PAGE in $UPDATED_PAGES
+          do $ASCIIBINDER build --page=$PAGE
+          echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/$PAGE.html"
+        done
+    done
   else
     for PAGE in $PAGES
       do $ASCIIBINDER build --page=$PAGE
