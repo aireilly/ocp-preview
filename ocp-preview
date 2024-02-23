@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#version 0.8
+#version 0.9
 
 set -e
 
@@ -39,6 +39,13 @@ function full_build {
   echo "Check the docs at: http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html"
 }
 
+function full_build_all {
+  $ASCIIBINDER build; echo "Running rsync..."; rsync_build; echo "...rsync run complete!"
+
+  xdg-open >/dev/null 2>&1 http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html
+  echo "Check the docs at: http://$FILE_SERVER/$USER/$CURRENT_BRANCH/welcome/index.html"
+}
+
 function refresh_build {
   if [[ -z "$PAGES" ]]; then
     for MODULE in $MODULES
@@ -62,6 +69,12 @@ function rsync_build {
 
 function local_full_build {
   $ASCIIBINDER clean; $ASCIIBINDER build -d $DISTRO
+  xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html
+  echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html"
+}
+
+function local_full_build_all {
+  $ASCIIBINDER clean; $ASCIIBINDER build
   xdg-open >/dev/null 2>&1 $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html
   echo "Check the docs at: $REPO_PATH/_preview/$DISTRO/$CURRENT_BRANCH/welcome/index.html"
 }
@@ -90,11 +103,15 @@ function delete_build {
 
 function show_help {
   echo "Usage: ocp-preview [OPTION] [DISTRO]"
-  echo "Usage: [DISTRO] is optional, build default is openshift-enterprise. Specify 'all' to build all distros."
+  echo "Usage: [DISTRO] is optional, build default is openshift-enterprise. Specify '-b' to build all distros."
   echo "-b, --build"
   echo "               does a full clean build and rsync."
+  echo "-a, --all"
+  echo "               does a full clean build of all distros and rsync."
   echo "-l, --local-build"
   echo "               does a full clean build locally, does not rsync."
+  echo "-c, --local-all"
+  echo "               does a full clean build of all distros, does not rsync."
   echo "-r, --refresh"
   echo "               builds and rsyncs updated files only."
   echo "-f, --local-refresh"
@@ -105,18 +122,20 @@ function show_help {
 
 if [ "$1" = "--build" -o "$1" = "-b" ]; then
   full_build
+elif [ "$1" = "--all" -o "$1" = "-a" ]; then
+  full_build_all
 elif [ "$1" = "--refresh" -o "$1" = "-r" ]; then
   refresh_build
 elif [ "$1" = "--local-build" -o "$1" = "-l" ]; then
   local_full_build
+elif [ "$1" = "--local-build-all" -o "$1" = "-c" ]; then
+  local_full_build_all
 elif [ "$1" = "--local-refresh" -o "$1" = "-f" ]; then
   local_refresh_build
 elif [ "$1" = "--delete" -o "$1" = "-d" ]; then
   delete_build
 elif [ "$1" = "--help" -o "$1" = "-h" ]; then
   show_help 
-elif [[ ! $@ =~ ^\-.+ ]]; then
+elif [ $# -eq 0 ]; then
   show_help
-else
-  break
 fi
