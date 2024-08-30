@@ -20,7 +20,7 @@ Using the `-r, --refresh` option, you can **build and deploy a HTML preview in ~
 [user]
     name = aireilly
 [server]
-    name = file.emea.redhat.com
+    name = file.corp.redhat.com
 [repo]
     name = /home/aireilly/openshift-docs
 ```
